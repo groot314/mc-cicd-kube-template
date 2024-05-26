@@ -29,7 +29,7 @@ jobs:
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           path: 'build/libs/'
-          destination: 'INSERT_BUCKET**/mclobby/plugins'
+          destination: 'INSERT_BUCKET**/template/plugins'
           glob: '*.jar'
           parent: false
   deploy:
@@ -57,4 +57,4 @@ jobs:
       - name: Restart statefulset
         uses: actions-hub/kubectl@master
         with:
-          args: rollout restart statefulset mclobby -n minecraft
+          args: rollout restart statefulset template -n minecraft
