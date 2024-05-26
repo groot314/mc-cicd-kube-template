@@ -1,0 +1,4 @@
+name: plugin
+version: '${version}'
+main: io.papermc.plugin.Plugin
+api-version: '1.20'

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: template
+  namespace: minecraft
+  labels:
+    app: template
+spec:
+  serviceName: template
+  replicas: 1
+  selector:
+    matchLabels:
+      app: template
+  template:
+    metadata:
+      labels:
+        app: template
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 3001
+      volumes:
+      - name: minecraft-data
+        persistentVolumeClaim:
+          claimName: template-data-pvc-csi
+      initContainers:
+        - name: download-jar
+          image: google/cloud-sdk:latest
+          command: ['sh', '-c', 'mkdir -p /data/plugins && mkdir -p /data/config && gsutil cp gs://INSERT_BUCKET**/template/plugins/*.jar /data/plugins/ && gsutil cp gs://INSERT_BUCKET**/paper_config/*.yml /data/config/']
+          volumeMounts:
+            - name: minecraft-data
+              mountPath: /data
+      containers:
+      - name: minecraft-server
+        image: itzg/minecraft-server:latest
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 500m
+        env:
+          - name:  EULA
+            value: 'TRUE'
+          - name: MODE
+            value: 'survival'
+          - name: MOTD
+            value: 'MOTD'
+          - name: ALLOW_FLIGHT
+            value: 'FALSE'
+          - name: VIEW_DISTANCE
+            value: '15'
+          - name: TYPE
+            value: 'PAPER'
+          - name: ONLINE_MODE
+            value: 'FALSE'
+        ports:
+        - containerPort: 25565
+          name: minecraft
+        volumeMounts:
+          - name: minecraft-data
+            mountPath:  /data
+        readinessProbe:
+          exec:
+            command:
+            - mcstatus
+            - 127.0.0.1
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        livenessProbe:
+          exec:
+            command:
+            - mcstatus
+            - 127.0.0.1
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 30
